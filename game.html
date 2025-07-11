@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Corporate River Crossing</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #eef;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #003b6f;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+    }
+    .scene {
+      display: flex;
+      justify-content: space-between;
+      padding: 2rem;
+    }
+    .bank, .boat {
+      width: 30%;
+      text-align: center;
+    }
+    .character {
+      margin: 0.5rem;
+      padding: 0.5rem;
+      background: #fff;
+      border: 1px solid #333;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .boat {
+      background: #ffecb3;
+      border-radius: 12px;
+      padding: 1rem;
+      min-height: 200px;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+    }
+    footer {
+      text-align: center;
+      font-size: 0.8rem;
+      padding: 1rem;
+      background: #ddd;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Corporate River Crossing Puzzle</h1>
+    <p>Get everyone across safely!</p>
+  </header>
+
+  <div class="scene">
+    <div class="bank" id="left-bank">
+      <h2>Left Bank</h2>
+    </div>
+
+    <div class="boat" id="boat">
+      <h2>Boat (on <span id="boat-side">Left</span>)</h2>
+    </div>
+
+    <div class="bank" id="right-bank">
+      <h2>Right Bank</h2>
+    </div>
+  </div>
+
+  <div style="text-align:center;">
+    <button onclick="moveBoat()">Move Boat</button>
+  </div>
+
+  <footer>
+    Don't leave the Project Manager with the Engineer or Senior Manager without the Team Lead!
+  </footer>
+
+  <script>
+    const characters = {
+      'Team Lead': 'left',
+      'Senior Manager': 'left',
+      'Project Manager': 'left',
+      'Engineer': 'left'
+    };
+
+    let boat = {
+      side: 'left',
+      passengers: []
+    };
+
+    function render() {
+      const leftBank = document.getElementById('left-bank');
+      const rightBank = document.getElementById('right-bank');
+      const boatDiv = document.getElementById('boat');
+      const boatSideSpan = document.getElementById('boat-side');
+
+      leftBank.innerHTML = '<h2>Left Bank</h2>';
+      rightBank.innerHTML = '<h2>Right Bank</h2>';
+      boatDiv.innerHTML = `<h2>Boat (on <span id="boat-side">${boat.side.charAt(0).toUpperCase() + boat.side.slice(1)}</span>)</h2>`;
+
+      for (const [name, location] of Object.entries(characters)) {
+        const div = document.createElement('div');
+        div.className = 'character';
+        div.textContent = name;
+        div.onclick = () => togglePassenger(name);
+
+        if (location === 'left') leftBank.appendChild(div);
+        else if (location === 'right') rightBank.appendChild(div);
+        else if (location === 'boat') boatDiv.appendChild(div);
+      }
+    }
+
+    function togglePassenger(name) {
+      if (characters[name] === 'boat') {
+        characters[name] = boat.side;
+        boat.passengers = boat.passengers.filter(p => p !== name);
+      } else if (characters[name] === boat.side) {
+        if (boat.passengers.length >= 2) {
+          alert("Boat can only carry 2 people!");
+          return;
+        }
+        characters[name] = 'boat';
+        boat.passengers.push(name);
+      }
+      render();
+    }
+
+    function moveBoat() {
+      if (!boat.passengers.includes('Team Lead')) {
+        alert("The Team Lead must be in the boat to move it!");
+        return;
+      }
+
+      boat.side = boat.side === 'left' ? 'right' : 'left';
+
+      for (let name of boat.passengers) {
+        characters[name] = boat.side;
+      }
+      boat.passengers = [];
+
+      if (checkInvalidState()) {
+        alert("Oops! Someone got stuck in a meeting or forced to write a report. Game over.");
+        location.reload();  // Reset
+      }
+
+      render();
+    }
+
+    function checkInvalidState() {
+      for (let side of ['left', 'right']) {
+        const people = Object.entries(characters)
+          .filter(([_, loc]) => loc === side)
+          .map(([name]) => name);
+        if (!people.includes('Team Lead')) {
+          if (people.includes('Senior Manager') && people.includes('Project Manager')) return true;
+          if (people.includes('Project Manager') && people.includes('Engineer')) return true;
+        }
+      }
+      return false;
+    }
+
+    render();
+  </script>
+</body>
+</html>
